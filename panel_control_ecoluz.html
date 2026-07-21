@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoLuz DHL — Panel de control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0B1E33;
+    --bg-panel:#12283F;
+    --bg-card:#16304C;
+    --line:#22405F;
+    --text-main:#E8EEF5;
+    --text-muted:#7F98B3;
+    --accent-blue:#3D8BFF;
+    --accent-yellow:#FFC72C;
+    --on-glow:#FFC72C;
+    --off-dim:#3A4E64;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg-deep);
+    color:var(--text-main);
+    font-family:'Archivo',sans-serif;
+    min-height:100vh;
+    padding:32px 20px 60px;
+  }
+  .wrap{max-width:1000px;margin:0 auto;}
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:12px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:20px;
+    margin-bottom:28px;
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:2px;
+    color:var(--accent-yellow);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  h1{font-size:28px;font-weight:800;letter-spacing:-0.5px;}
+  .conn-status{
+    display:flex;align-items:center;gap:8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;color:var(--text-muted);
+  }
+  .conn-dot{width:9px;height:9px;border-radius:50%;background:var(--off-dim);}
+  .conn-dot.live{background:#5EE07A;box-shadow:0 0 8px #5EE07A;}
+
+  .section-label{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    margin:0 0 14px 2px;
+  }
+  .section-tag{
+    font-size:10px;
+    padding:2px 8px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    color:var(--accent-blue);
+    letter-spacing:0.5px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:14px;
+    margin-bottom:32px;
+  }
+
+  .card{
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px 20px;
+  }
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+  .zone-name{font-weight:700;font-size:16px;}
+  .zone-mode{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);margin-top:3px;}
+
+  .led{width:14px;height:14px;border-radius:50%;background:var(--off-dim);flex-shrink:0;margin-top:2px;transition:background .3s, box-shadow .3s;}
+  .led.on{background:var(--on-glow);box-shadow:0 0 10px var(--on-glow);}
+
+  .counter-row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    border-top:1px solid var(--line);
+    padding-top:12px;
+  }
+  .counter-label{font-size:12px;color:var(--text-muted);}
+  .counter-value{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:var(--accent-blue);}
+
+  .toggle-btn{
+    width:100%;
+    margin-top:12px;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--bg-panel);
+    color:var(--text-main);
+    font-family:'Archivo',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    transition:background .2s, border-color .2s;
+  }
+  .toggle-btn:hover{border-color:var(--accent-blue);}
+  .toggle-btn.state-on{background:var(--accent-yellow);color:#1a1204;border-color:var(--accent-yellow);}
+
+  .summary{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:22px 24px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .summary-label{font-size:13px;color:var(--text-muted);}
+  .summary-value{font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:600;color:var(--accent-yellow);}
+  .last-update{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand-eyebrow">Proyecto integrador · UTM</div>
+      <h1>EcoLuz DHL — Panel de control</h1>
+    </div>
+    <div class="conn-status">
+      <span class="conn-dot" id="connDot"></span>
+      <span id="connText">Conectando...</span>
+    </div>
+  </header>
+
+  <div class="section-label">Oscuridad <span class="section-tag">1 sensor LDR · 5 áreas</span></div>
+  <div class="grid" id="oscuridadGrid"></div>
+
+  <div class="section-label">Movimiento <span class="section-tag">1 sensor infrarrojo</span></div>
+  <div class="grid" id="movimientoGrid"></div>
+
+  <div class="section-label">Zona fija <span class="section-tag">control manual</span></div>
+  <div class="grid" id="fijoGrid"></div>
+
+  <div class="summary">
+    <div>
+      <div class="summary-label">Total de activaciones hoy</div>
+      <div class="summary-value" id="totalCount">0</div>
+    </div>
+    <div class="last-update" id="lastUpdate">Última lectura: —</div>
+  </div>
+
+</div>
+
+<script>
+// ---------------- CONFIGURACIÓN ----------------
+const CH1_ID = "3428321";
+const CH1_READ_KEY = "7SE975T5P9SNXBQI";
+const CH2_ID = "3428324";
+const CH2_WRITE_KEY = "XOIUFRR3MLW6M4PU";
+const CH2_READ_KEY = "YVB0Q7VK9XONPIB7";
+
+const REFRESH_MS = 15000;
+
+// Mapeo de campos en el Canal 1 (DHL_Sensores):
+// field1 = Movimiento (estado) | field2 = Oscuridad (estado) | field3 = Fijo (estado)
+// field4 = contador Movimiento | field5 = contador Oscuridad | field6 = contador total
+
+const areasOscuridad = ["Acceso principal", "Atención al cliente", "Monitoreo", "Comedor", "Baños"];
+
+let fijoState = false;
+
+// ---------------- RENDER INICIAL ----------------
+function renderOscuridad() {
+  const grid = document.getElementById("oscuridadGrid");
+  grid.innerHTML = areasOscuridad.map((nombre, i) => `
+    <div class="card">
+      <div class="card-top">
+        <div>
+          <div class="zone-name">${nombre}</div>
+          <div class="zone-mode">Sensor de luz (LDR)</div>
+        </div>
+        <div class="led" id="led-osc-${i}"></div>
+      </div>
+      <div class="counter-row">
+        <span class="counter-label">Activaciones hoy</span>
+        <span class="counter-value" id="count-osc-${i}">0</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderMovimiento() {
+  const grid = document.getElementById("movimientoGrid");
+  grid.innerHTML = `
+    <div class="card">
+      <div class="card-top">
+        <div>
+          <div class="zone-name">Pasillo principal</div>
+          <div class="zone-mode">Sensor de movimiento</div>
+        </div>
+        <div class="led" id="led-mov"></div>
+      </div>
+      <div class="counter-row">
+        <span class="counter-label">Activaciones hoy</span>
+        <span class="counter-value" id="count-mov">0</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderFijo() {
+  const grid = document.getElementById("fijoGrid");
+  grid.innerHTML = `
+    <div class="card">
+      <div class="card-top">
+        <div>
+          <div class="zone-name">Bodega</div>
+          <div class="zone-mode">Siempre disponible</div>
+        </div>
+        <div class="led" id="led-fijo"></div>
+      </div>
+      <button class="toggle-btn" id="btn-fijo" onclick="toggleFijo()">Cargando...</button>
+    </div>
+  `;
+}
+
+// ---------------- LECTURA DEL CANAL 1 (sensores) ----------------
+async function leerCanal1() {
+  try {
+    const url = `https://api.thingspeak.com/channels/${CH1_ID}/feeds/last.json?api_key=${CH1_READ_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const oscuridadOn = data.field2 === "1";
+    const movimientoOn = data.field1 === "1";
+    const fijoOn = data.field3 === "1";
+
+    const contadorOsc = parseInt(data.field5 || "0", 10);
+    const contadorMov = parseInt(data.field4 || "0", 10);
+
+    areasOscuridad.forEach((_, i) => {
+      document.getElementById(`led-osc-${i}`).classList.toggle("on", oscuridadOn);
+      document.getElementById(`count-osc-${i}`).textContent = contadorOsc;
+    });
+
+    document.getElementById("led-mov").classList.toggle("on", movimientoOn);
+    document.getElementById("count-mov").textContent = contadorMov;
+
+    const ledFijo = document.getElementById("led-fijo");
+    if (ledFijo) ledFijo.classList.toggle("on", fijoOn);
+
+    document.getElementById("totalCount").textContent = contadorOsc + contadorMov;
+
+    document.getElementById("lastUpdate").textContent =
+      "Última lectura: " + new Date().toLocaleTimeString("es-MX");
+    setConnStatus(true);
+  } catch (err) {
+    console.error("Error leyendo Canal 1:", err);
+    setConnStatus(false);
+  }
+}
+
+// ---------------- LECTURA DEL CANAL 2 (estado del comando de Bodega) ----------------
+async function leerCanal2() {
+  try {
+    const url = `https://api.thingspeak.com/channels/${CH2_ID}/feeds/last.json?api_key=${CH2_READ_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    fijoState = data.field1 === "1";
+    actualizarBoton();
+  } catch (err) {
+    console.error("Error leyendo Canal 2:", err);
+  }
+}
+
+function actualizarBoton() {
+  const btn = document.getElementById("btn-fijo");
+  btn.textContent = fijoState ? "Apagar Bodega" : "Prender Bodega";
+  btn.classList.toggle("state-on", fijoState);
+}
+
+// ---------------- ENVÍO DE COMANDOS ----------------
+async function toggleFijo() {
+  fijoState = !fijoState;
+  actualizarBoton();
+
+  const url = `https://api.thingspeak.com/update?api_key=${CH2_WRITE_KEY}&field1=${fijoState ? 1 : 0}`;
+  try {
+    await fetch(url);
+  } catch (err) {
+    console.error("Error enviando comando:", err);
+  }
+}
+
+function setConnStatus(ok) {
+  document.getElementById("connDot").classList.toggle("live", ok);
+  document.getElementById("connText").textContent = ok ? "En línea" : "Sin conexión";
+}
+
+// ---------------- INICIO ----------------
+renderOscuridad();
+renderMovimiento();
+renderFijo();
+leerCanal1();
+leerCanal2();
+setInterval(leerCanal1, REFRESH_MS);
+setInterval(leerCanal2, REFRESH_MS);
+</script>
+</body>
+</html>
